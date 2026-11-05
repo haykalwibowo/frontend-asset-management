@@ -23,7 +23,7 @@ interface Category {
 interface Employee {
   id: string;
   name: string;
-  department: string | null;
+  department: { id: string; name: string } | null;
 }
 
 interface Location {
@@ -471,7 +471,7 @@ export default function AssetDetailClient({ assetId }: { assetId: string }) {
                 <option value="">-- Pilih Karyawan --</option>
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
-                    {emp.name} {emp.department ? `(${emp.department})` : ""}
+                    {emp.name} {emp.department ? `(${emp.department.name})` : ""}
                   </option>
                 ))}
               </select>
@@ -540,7 +540,7 @@ export default function AssetDetailClient({ assetId }: { assetId: string }) {
                     <p className="text-sm font-medium text-gray-800">
                       {h.employee.name}{" "}
                       <span className="font-normal text-gray-400">
-                        ({h.employee.department || "-"})
+                        ({h.employee.department?.name || "-"})
                       </span>
                     </p>
                     <p className="text-xs text-gray-500">
@@ -586,7 +586,7 @@ export default function AssetDetailClient({ assetId }: { assetId: string }) {
                   <tr key={h.id} className="border-b border-gray-100">
                     <td className="py-2 text-gray-800">{h.employee.name}</td>
                     <td className="py-2 text-gray-500">
-                      {h.employee.department || "-"}
+                      {h.employee.department?.name || "-"}
                     </td>
                     <td className="py-2 text-gray-500">{h.quantity}</td>
                     <td className="py-2 text-gray-500">

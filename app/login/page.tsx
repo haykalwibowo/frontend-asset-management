@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { homePathFor } from "@/lib/roles";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,13 +26,16 @@ export default function LoginPage() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      if (res.data.user.role === "staff") {
-        router.push("/staff");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push(homePathFor(res.data.user.role));
     } catch (err) {
-      setError("Email atau password salah");
+      // Bedakan salah password dengan server yang tidak bisa dihubungi
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        setError("Email atau password salah");
+      } else if (axios.isAxiosError(err) && !err.response) {
+        setError("Server tidak bisa dihubungi. Pastikan backend sudah jalan.");
+      } else {
+        setError("Terjadi kesalahan saat login. Coba lagi.");
+      }
     } finally {
       setLoading(false);
     }

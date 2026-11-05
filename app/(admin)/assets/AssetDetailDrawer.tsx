@@ -34,7 +34,7 @@ interface Category {
 interface Employee {
   id: string;
   name: string;
-  department: string | null;
+  department: { id: string; name: string } | null;
 }
 
 interface Location {
@@ -784,7 +784,7 @@ export default function AssetDetailDrawer({
                         {employees.map((emp) => (
                           <option key={emp.id} value={emp.id}>
                             {emp.name}{" "}
-                            {emp.department ? `(${emp.department})` : ""}
+                            {emp.department ? `(${emp.department.name})` : ""}
                           </option>
                         ))}
                       </select>
@@ -858,7 +858,7 @@ export default function AssetDetailDrawer({
                               <p className="truncate text-sm font-semibold text-gray-900">
                                 {h.employee.name}{" "}
                                 <span className="font-normal text-gray-400">
-                                  ({h.employee.department || "-"})
+                                  ({h.employee.department?.name || "-"})
                                 </span>
                               </p>
                               <p className="text-xs text-gray-500">
@@ -914,7 +914,7 @@ export default function AssetDetailDrawer({
                                 {h.employee.name}
                               </td>
                               <td className="py-2.5 pr-3 text-gray-500">
-                                {h.employee.department || "-"}
+                                {h.employee.department?.name || "-"}
                               </td>
                               <td className="py-2.5 pr-3 text-gray-500">
                                 {h.quantity}

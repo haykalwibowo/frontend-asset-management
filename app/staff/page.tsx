@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { isAdmin, roleLabel } from "@/lib/roles";
 import {
   Boxes,
   LogOut,
@@ -191,7 +192,7 @@ export default function StaffPage() {
     }
 
     const parsed = JSON.parse(userData);
-    if (parsed.role !== "staff") {
+    if (isAdmin(parsed.role)) {
       router.push("/dashboard");
       return;
     }
@@ -367,7 +368,9 @@ export default function StaffPage() {
                 <p className="text-sm font-semibold text-gray-900">
                   {user.name}
                 </p>
-                <p className="text-[11px] text-gray-400">Staff</p>
+                <p className="text-[11px] text-gray-400">
+                  {roleLabel(user.role)}
+                </p>
               </div>
             </div>
             <button

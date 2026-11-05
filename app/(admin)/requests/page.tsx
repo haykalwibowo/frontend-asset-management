@@ -28,7 +28,11 @@ interface RequestItem {
   requestedAt: string;
   decidedAt: string | null;
   asset: { id: string; name: string };
-  employee: { id: string; name: string; department: string | null };
+  employee: {
+    id: string;
+    name: string;
+    department: { id: string; name: string } | null;
+  };
   assignmentHistory?: AssignmentHistory | AssignmentHistory[] | null;
 }
 
@@ -318,7 +322,7 @@ export default function RequestsPage() {
                               {r.employee.name}
                             </p>
                             <p className="text-xs text-gray-400">
-                              {r.employee.department || "-"}
+                              {r.employee.department?.name || "-"}
                             </p>
                           </td>
                           <td className="px-4 py-3.5">
@@ -432,7 +436,7 @@ export default function RequestsPage() {
                                 {r.employee.name}
                               </p>
                               <p className="text-xs text-gray-400">
-                                {r.employee.department || "-"}
+                                {r.employee.department?.name || "-"}
                               </p>
                             </td>
                             <td className="px-4 py-3.5">
