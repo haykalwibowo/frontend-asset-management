@@ -66,12 +66,34 @@ export default function PurchaseTable({
                 </td>
                 <td className="whitespace-nowrap px-5 py-3.5 text-right font-medium text-gray-900">
                   {formatRupiah(r.totalEstimate)}
+                  {r.totalFinal !== null && (
+                    <p
+                      className={`text-xs font-normal ${
+                        r.overBudget ? "text-orange-600" : "text-gray-500"
+                      }`}
+                    >
+                      Final {formatRupiah(r.totalFinal)}
+                    </p>
+                  )}
                 </td>
                 <td className="whitespace-nowrap px-5 py-3.5 text-gray-600">
                   {formatDateOnly(r.dueDate)}
                 </td>
                 <td className="px-5 py-3.5">
                   <StatusBadge status={r.status} label={r.statusLabel} />
+                  {r.overBudget && (
+                    <p className="mt-1 text-xs font-medium text-orange-600">
+                      ⚠ Melebihi estimasi
+                    </p>
+                  )}
+                  {r.latestUpdate?.note && r.status === "IN_PROCUREMENT" && (
+                    <p
+                      className="mt-1 max-w-[16rem] truncate text-xs text-gray-500"
+                      title={r.latestUpdate.note}
+                    >
+                      Update: {r.latestUpdate.note}
+                    </p>
+                  )}
                 </td>
               </tr>
             ))}

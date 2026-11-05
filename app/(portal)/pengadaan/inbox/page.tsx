@@ -76,7 +76,14 @@ function HistoryTable({ rows }: { rows: PurchaseSummary[] }) {
                               : "bg-red-50 text-red-700 ring-red-600/20"
                           }`}
                         >
-                          {approved ? "Approve" : "Tolak"} · {STEP_LABEL[a.step] ?? a.step}
+                          {a.step === "PROCUREMENT"
+                            ? approved
+                              ? "Selesai diproses"
+                              : "Dibatalkan"
+                            : approved
+                            ? "Approve"
+                            : "Tolak"}{" "}
+                          · {STEP_LABEL[a.step] ?? a.step}
                         </span>
                         <p className="mt-1 text-xs text-gray-500">{formatDateTime(a.createdAt)}</p>
                         {a.onBehalfOfName && (

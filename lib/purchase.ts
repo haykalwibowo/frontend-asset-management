@@ -11,9 +11,13 @@ export interface PurchaseSummary {
   requesterDepartment: string | null;
   purpose: string;
   totalEstimate: number;
+  totalFinal: number | null;
+  overBudget: boolean;
   itemCount: number;
   status: string;
   statusLabel: string;
+  // update progres terbaru (mis. dari procurement)
+  latestUpdate: { note: string | null; actorName: string | null; createdAt: string } | null;
   // hanya ada di scope "processed": keputusan terakhir user yang login
   myAction?: PurchaseLog | null;
 }
@@ -21,7 +25,7 @@ export interface PurchaseSummary {
 export interface PurchaseLog {
   id: string;
   step: string;
-  action: "SUBMITTED" | "APPROVED" | "REJECTED" | "SKIPPED";
+  action: "SUBMITTED" | "APPROVED" | "REJECTED" | "SKIPPED" | "NOTE";
   actorName: string | null;
   actorPosition: string | null;
   onBehalfOfName: string | null;
@@ -38,6 +42,24 @@ export interface FlowStep {
   state: FlowState;
   waitingFor: string | null;
   log: PurchaseLog | null;
+  notes: PurchaseLog[];
+}
+
+export interface PurchaseItem {
+  id: string;
+  lineNo: number;
+  description: string;
+  quantity: number;
+  estimatedPrice: number;
+  subtotal: number;
+  referenceLink: string | null;
+  purchaseMethod: "vendor" | "link" | null;
+  vendorName: string | null;
+  vendorContact: string | null;
+  poNumber: string | null;
+  purchaseLink: string | null;
+  finalPrice: number | null;
+  finalSubtotal: number | null;
 }
 
 export interface PurchaseDetail {
@@ -61,23 +83,25 @@ export interface PurchaseDetail {
   attachmentPath: string | null;
   attachmentName: string | null;
   totalEstimate: number;
+  totalFinal: number | null;
+  overBudget: boolean;
+  priceVarianceNote: string | null;
+  estimatedArrival: string | null;
+  quotationPath: string | null;
+  quotationName: string | null;
+  procuredAt: string | null;
   status: string;
   statusLabel: string;
   supervisorApprover: { id: string; name: string; position: string | null } | null;
-  items: {
-    id: string;
-    lineNo: number;
-    description: string;
-    quantity: number;
-    estimatedPrice: number;
-    subtotal: number;
-  }[];
+  items: PurchaseItem[];
   logs: PurchaseLog[];
   flow: FlowStep[];
   permissions: {
     canAct: boolean;
     step: string | null;
     onBehalfOf: { name: string; position: string | null } | null;
+    canProcure: boolean;
+    procureOnBehalfOf: { name: string; position: string | null } | null;
   };
 }
 
@@ -111,6 +135,7 @@ export const STEP_LABEL: Record<string, string> = {
   SUPERVISOR: "Atasan",
   GA: "GA",
   FINANCE: "Finance",
+  PROCUREMENT: "Procurement",
 };
 
 export type Tone = "amber" | "blue" | "green" | "red" | "gray";

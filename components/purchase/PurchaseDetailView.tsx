@@ -15,8 +15,12 @@ import {
   Circle,
   CheckCircle2,
   XCircle,
+  ExternalLink,
+  AlertTriangle,
+  MessageSquare,
 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
+import ProcurementPanel from "./ProcurementPanel";
 import {
   apiUrl,
   authHeaders,
@@ -108,11 +112,26 @@ function Timeline({ flow }: { flow: FlowStep[] }) {
               {step.state === "cancelled" && (
                 <p className="text-xs text-gray-400">Tidak dilanjutkan</p>
               )}
+              {step.notes.map((n) => (
+                <div key={n.id} className="mt-1 flex gap-1.5 rounded-md bg-blue-50 px-2 py-1.5 text-xs text-blue-800">
+                  <MessageSquare size={12} className="mt-0.5 shrink-0" />
+                  <div>
+                    <p>{n.note}</p>
+                    <p className="text-blue-600/70">
+                      {actorText(n)} · {formatDateTime(n.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              ))}
               {log && (step.state === "done" || step.state === "rejected") && (
                 <div className="mt-0.5 text-xs text-gray-500">
                   {actorText(log) && (
                     <p>
-                      {step.state === "rejected" ? "Ditolak oleh " : ""}
+                      {step.state === "rejected"
+                        ? step.key === "PROCUREMENT"
+                          ? "Dibatalkan oleh "
+                          : "Ditolak oleh "
+                        : ""}
                       <span className="font-medium text-gray-700">{actorText(log)}</span>
                       {log.actorPosition ? ` · ${log.actorPosition}` : ""}
                     </p>
@@ -288,6 +307,9 @@ export default function PurchaseDetailView({
   if (!detail) return <p className="text-sm text-gray-500">Memuat...</p>;
 
   const r = detail.requester;
+  const canProcure = detail.permissions.canProcure;
+  const hasProcurement = detail.items.some((it) => it.purchaseMethod || it.finalPrice !== null);
+  const showProcurementCols = hasProcurement && !canProcure;
 
   return (
     <div>
@@ -321,6 +343,24 @@ export default function PurchaseDetailView({
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
+          {canProcure && <ProcurementPanel detail={detail} onDone={load} />}
+
+          {detail.overBudget && detail.totalFinal !== null && (
+            <div className="flex gap-3 rounded-xl bg-orange-50 p-4 text-sm text-orange-900 ring-1 ring-orange-200">
+              <AlertTriangle size={18} className="mt-0.5 shrink-0 text-orange-600" />
+              <div>
+                <p className="font-semibold">
+                  Total final {formatRupiah(detail.totalFinal)} melebihi estimasi{" "}
+                  {formatRupiah(detail.totalEstimate)} (+
+                  {formatRupiah(detail.totalFinal - detail.totalEstimate)})
+                </p>
+                {detail.priceVarianceNote && (
+                  <p className="mt-0.5">Catatan procurement: {detail.priceVarianceNote}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Info pengajuan */}
           <div className={`${cardClass} p-5`}>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -389,13 +429,32 @@ export default function PurchaseDetailView({
                     <th className="px-5 py-3 text-right">Qty</th>
                     <th className="px-5 py-3 text-right">Estimasi Harga</th>
                     <th className="px-5 py-3 text-right">Subtotal</th>
+                    {showProcurementCols && (
+                      <>
+                        <th className="px-5 py-3">Pembelian</th>
+                        <th className="px-5 py-3 text-right">Harga Final</th>
+                        <th className="px-5 py-3 text-right">Subtotal Final</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {detail.items.map((it) => (
                     <tr key={it.id}>
                       <td className="px-5 py-3 text-gray-500">{it.lineNo}</td>
-                      <td className="px-5 py-3 text-gray-900">{it.description}</td>
+                      <td className="px-5 py-3 text-gray-900">
+                        {it.description}
+                        {it.referenceLink && (
+                          <a
+                            href={it.referenceLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-0.5 flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                          >
+                            <ExternalLink size={11} /> Link dari pemohon
+                          </a>
+                        )}
+                      </td>
                       <td className="px-5 py-3 text-right">{it.quantity}</td>
                       <td className="whitespace-nowrap px-5 py-3 text-right">
                         {formatRupiah(it.estimatedPrice)}
@@ -403,6 +462,45 @@ export default function PurchaseDetailView({
                       <td className="whitespace-nowrap px-5 py-3 text-right font-medium">
                         {formatRupiah(it.subtotal)}
                       </td>
+                      {showProcurementCols && (
+                        <>
+                          <td className="px-5 py-3 text-xs">
+                            {it.purchaseMethod === "vendor" && (
+                              <>
+                                <p className="font-medium text-gray-900">{it.vendorName}</p>
+                                <p className="text-gray-500">
+                                  {[it.vendorContact, it.poNumber && `PO ${it.poNumber}`]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </p>
+                              </>
+                            )}
+                            {it.purchaseMethod === "link" && it.purchaseLink && (
+                              <a
+                                href={it.purchaseLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                              >
+                                <ExternalLink size={11} /> Link pembelian
+                              </a>
+                            )}
+                            {!it.purchaseMethod && <span className="text-gray-400">-</span>}
+                          </td>
+                          <td
+                            className={`whitespace-nowrap px-5 py-3 text-right ${
+                              it.finalPrice !== null && it.finalPrice > it.estimatedPrice
+                                ? "text-orange-600"
+                                : ""
+                            }`}
+                          >
+                            {it.finalPrice !== null ? formatRupiah(it.finalPrice) : "-"}
+                          </td>
+                          <td className="whitespace-nowrap px-5 py-3 text-right font-medium">
+                            {it.finalSubtotal !== null ? formatRupiah(it.finalSubtotal) : "-"}
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -414,6 +512,18 @@ export default function PurchaseDetailView({
                     <td className="whitespace-nowrap px-5 py-3 text-right font-bold text-gray-900">
                       {formatRupiah(detail.totalEstimate)}
                     </td>
+                    {showProcurementCols && (
+                      <>
+                        <td colSpan={2} />
+                        <td
+                          className={`whitespace-nowrap px-5 py-3 text-right font-bold ${
+                            detail.overBudget ? "text-orange-600" : "text-gray-900"
+                          }`}
+                        >
+                          {detail.totalFinal !== null ? formatRupiah(detail.totalFinal) : "-"}
+                        </td>
+                      </>
+                    )}
                   </tr>
                 </tfoot>
               </table>
@@ -430,6 +540,29 @@ export default function PurchaseDetailView({
 
         <div className="space-y-5">
           {detail.permissions.canAct && <ActionPanel detail={detail} onDone={load} />}
+          {!canProcure && (detail.estimatedArrival || detail.quotationPath) && (
+            <div className={`${cardClass} space-y-3 p-5`}>
+              <p className="text-sm font-semibold text-gray-900">Info Procurement</p>
+              {detail.estimatedArrival && (
+                <Field label="Perkiraan Barang Datang">
+                  {formatDateOnly(detail.estimatedArrival)}
+                </Field>
+              )}
+              {detail.quotationPath && (
+                <Field label="Quotation">
+                  <a
+                    href={`${apiUrl}/uploads/${detail.quotationPath}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                  >
+                    <FileText size={14} />
+                    <span className="truncate">{detail.quotationName ?? "Lihat dokumen"}</span>
+                  </a>
+                </Field>
+              )}
+            </div>
+          )}
           <div className={`${cardClass} p-5`}>
             <p className="mb-4 text-sm font-semibold text-gray-900">Progress</p>
             <Timeline flow={detail.flow} />

@@ -33,6 +33,7 @@ interface ItemRow {
   description: string;
   quantity: string;
   estimatedPrice: string;
+  referenceLink: string;
 }
 
 const MAX_FILE = 5 * 1024 * 1024;
@@ -82,7 +83,15 @@ function ChoiceGroup({
 }
 
 let nextKey = 1;
-const newRow = (): ItemRow => ({ key: nextKey++, description: "", quantity: "1", estimatedPrice: "" });
+const newRow = (): ItemRow => ({
+  key: nextKey++,
+  description: "",
+  quantity: "1",
+  estimatedPrice: "",
+  referenceLink: "",
+});
+
+const isHttpUrl = (v: string) => /^https?:\/\/\S+$/i.test(v);
 
 export default function NewPurchaseRequestPage() {
   const router = useRouter();
@@ -138,6 +147,8 @@ export default function NewPurchaseRequestPage() {
         return setError(`Jumlah barang no. ${i + 1} minimal 1.`);
       if (r.estimatedPrice === "" || Number(r.estimatedPrice) < 0)
         return setError(`Estimasi harga barang no. ${i + 1} wajib diisi.`);
+      if (r.referenceLink.trim() && !isHttpUrl(r.referenceLink.trim()))
+        return setError(`Link pembelian barang no. ${i + 1} harus diawali http:// atau https://`);
     }
 
     const fd = new FormData();
@@ -154,6 +165,7 @@ export default function NewPurchaseRequestPage() {
           description: r.description.trim(),
           quantity: Number(r.quantity),
           estimatedPrice: Number(r.estimatedPrice),
+          referenceLink: r.referenceLink.trim() || undefined,
         }))
       )
     );
@@ -281,7 +293,7 @@ export default function NewPurchaseRequestPage() {
           Product / Service Specification
         </p>
         <div className="overflow-x-auto">
-          <table className="mt-3 w-full min-w-[640px] text-left text-sm">
+          <table className="mt-3 w-full min-w-[760px] text-left text-sm">
             <thead className="border-y border-gray-200 bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500">
               <tr>
                 <th className="w-10 px-3 py-2.5 text-center">No.</th>
@@ -295,8 +307,8 @@ export default function NewPurchaseRequestPage() {
             <tbody className="divide-y divide-gray-100">
               {items.map((r, i) => (
                 <tr key={r.key}>
-                  <td className="px-3 py-2 text-center text-gray-500">{i + 1}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 pt-4 text-center align-top text-gray-500">{i + 1}</td>
+                  <td className="space-y-1.5 px-3 py-2">
                     <input
                       type="text"
                       value={r.description}
@@ -305,6 +317,15 @@ export default function NewPurchaseRequestPage() {
                       maxLength={1000}
                       aria-label={`Deskripsi barang ${i + 1}`}
                       className={inputClass}
+                    />
+                    <input
+                      type="url"
+                      value={r.referenceLink}
+                      onChange={(e) => updateItem(r.key, { referenceLink: e.target.value })}
+                      placeholder="Link pembelian (opsional), mis. https://tokopedia.com/..."
+                      maxLength={2000}
+                      aria-label={`Link pembelian barang ${i + 1}`}
+                      className={`${inputClass} text-xs`}
                     />
                   </td>
                   <td className="px-3 py-2">
