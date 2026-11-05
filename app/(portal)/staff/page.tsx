@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { isAdmin } from "@/lib/roles";
 import {
-  Boxes,
-  LogOut,
   Search,
   UploadCloud,
   FileText,
@@ -62,15 +61,6 @@ const statusTone = (status: string): "green" | "red" | "amber" => {
   if (status === "rejected") return "red";
   return "amber";
 };
-
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
 
 const formatSize = (bytes: number) =>
   bytes >= 1024 * 1024
@@ -191,7 +181,7 @@ export default function StaffPage() {
     }
 
     const parsed = JSON.parse(userData);
-    if (parsed.role !== "staff") {
+    if (isAdmin(parsed.role)) {
       router.push("/dashboard");
       return;
     }
@@ -209,12 +199,6 @@ export default function StaffPage() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    router.push("/login");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -311,7 +295,7 @@ export default function StaffPage() {
   const cardClass = "rounded-xl bg-white shadow-sm ring-1 ring-gray-200";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       {/* Toast notifikasi status request */}
       {notifications.length > 0 && (
         <div className="fixed right-4 top-20 z-50 flex w-80 flex-col gap-2">
@@ -343,45 +327,8 @@ export default function StaffPage() {
         </div>
       )}
 
-      {/* Topbar */}
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm">
-              <Boxes size={22} strokeWidth={1.8} />
-            </div>
-            <div className="leading-tight">
-              <p className="text-sm font-bold text-gray-900">
-                Asset Management
-              </p>
-              <p className="text-[11px] text-gray-400">Sistem Inventaris</p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-3 sm:flex">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-700">
-                {getInitials(user.name)}
-              </div>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold text-gray-900">
-                  {user.name}
-                </p>
-                <p className="text-[11px] text-gray-400">Staff</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
-            >
-              <LogOut size={16} />
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl p-6">
+      <div className="mx-auto max-w-3xl">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight text-gray-900">
             Request Peminjaman Aset
@@ -689,7 +636,7 @@ export default function StaffPage() {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import { isAdmin, roleLabel } from "@/lib/roles";
 import {
   LayoutDashboard,
   Boxes,
@@ -12,6 +13,9 @@ import {
   Tags,
   MapPin,
   Users,
+  Building2,
+  ShoppingCart,
+  UserCheck,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -40,10 +44,18 @@ const navSections: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    label: "Pengadaan",
+    items: [
+      { href: "/purchase-requests", title: "Pengadaan Aset", icon: ShoppingCart },
+      { href: "/delegations", title: "Delegasi Approval", icon: UserCheck },
+    ],
+  },
+  {
     label: "Master Data",
     items: [
       { href: "/categories", title: "Master Category", icon: Tags },
       { href: "/locations", title: "Master Location", icon: MapPin },
+      { href: "/departments", title: "Master Department", icon: Building2 },
       { href: "/employees", title: "Master Employee", icon: Users },
     ],
   },
@@ -78,7 +90,7 @@ export default function AdminLayout({
     }
 
     const parsed = JSON.parse(userData);
-    if (parsed.role === "staff") {
+    if (!isAdmin(parsed.role)) {
       router.push("/staff");
       return;
     }
@@ -148,8 +160,8 @@ export default function AdminLayout({
             </div>
             <div className="hidden leading-tight sm:block">
               <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-              <p className="text-xs capitalize text-gray-400">
-                {user.role === "admin" ? "Administrator" : user.role}
+              <p className="text-xs text-gray-400">
+                {roleLabel(user.role)}
               </p>
             </div>
           </div>
