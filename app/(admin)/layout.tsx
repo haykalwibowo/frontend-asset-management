@@ -14,6 +14,8 @@ import {
   MapPin,
   Users,
   Building2,
+  ShoppingCart,
+  UserCheck,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -39,6 +41,13 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { href: "/assets", title: "Daftar Aset", icon: Boxes },
       { href: "/requests", title: "Request Aset", icon: ClipboardList },
       { href: "/inventory", title: "Inventaris", icon: Warehouse },
+    ],
+  },
+  {
+    label: "Pengadaan",
+    items: [
+      { href: "/purchase-requests", title: "Pengadaan Aset", icon: ShoppingCart },
+      { href: "/delegations", title: "Delegasi Approval", icon: UserCheck },
     ],
   },
   {
